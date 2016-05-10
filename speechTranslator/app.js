@@ -23,7 +23,12 @@ var streamBuffers = require('stream-buffers');
 
 var azureDataMarketClientId = 'app_xinyzhang9';
 var azureDataMarketClientSecret = 'tq+Fi3XMhvKYbj3KNhEluKytQlCGJNyjU181ZBAF+1w=';
-var speechTranslateUrl = 'wss://dev.microsofttranslator.com/speech/translate?api-version=1.0&from=en&to=fr';
+
+var res = [];
+var speechTranslateUrl = [];
+speechTranslateUrl[0] = 'wss://dev.microsofttranslator.com/speech/translate?api-version=1.0&from=en&to=en';
+speechTranslateUrl[1] = 'wss://dev.microsofttranslator.com/speech/translate?api-version=1.0&from=es&to=en';
+speechTranslateUrl[2] = 'wss://dev.microsofttranslator.com/speech/translate?api-version=1.0&from=zh-CHS&to=en';
 
 // input wav file is in PCM 16bit, 16kHz, mono with proper WAV header
 var file = 'helloworld.wav';
@@ -32,7 +37,7 @@ var file = 'helloworld.wav';
 request.get({
     url: 'https://dev.microsofttranslator.com/languages?api-version=1.0&scope=text,tts,speech',
     headers: {
-        'Accept-Language': 'fr' // the language names will be localized to the 'Accept-Language'
+        'Accept-Language': 'en' // the language names will be localized to the 'Accept-Language'
     }
 },
 function (error, response, body) {
@@ -140,7 +145,64 @@ request.post(
 			});
 			
 			// connect to the service
-			ws.connect(speechTranslateUrl, null, null, { 'Authorization' : 'Bearer ' + accessToken });
+			ws.connect(speechTranslateUrl[0], null, null, { 'Authorization' : 'Bearer ' + accessToken });
+
+		}
+	}
+);
+
+
+// speech translalate api
+
+// get Azure Data Market Access Token
+request.post(
+	'https://datamarket.accesscontrol.windows.net/v2/OAuth2-13',
+	{
+		form : {
+			grant_type : 'client_credentials',
+			client_id : azureDataMarketClientId,
+			client_secret : azureDataMarketClientSecret,
+			scope : 'http://api.microsofttranslator.com'
+		}
+	},
+	
+	// once we get the access token, we hook up the necessary websocket events for sending audio and processing the response
+	function (error, response, body) {
+		if (!error && response.statusCode == 200) {
+			
+			// parse and get the acces token
+			var accessToken = JSON.parse(body).access_token;
+			
+			// connect to the speech translate api
+			var ws = new wsClient();
+			
+			// event for connection failure
+			ws.on('connectFailed', function (error) {
+				console.log('Initial connection failed: ' + error.toString());
+			});
+									
+			// event for connection succeed
+			ws.on('connect', function (connection) {
+				console.log('Websocket client connected');
+
+				// process message that is returned
+				connection.on('message', processMessage);
+				
+				connection.on('close', function (reasonCode, description) {
+					console.log('Connection closed: ' + reasonCode);
+				});
+
+				// print out the error
+				connection.on('error', function (error) {
+					console.log('Connection error: ' + error.toString());
+				});
+				
+				// send the file to the websocket endpoint
+				sendData(connection, file);
+			});
+			
+			// connect to the service
+			ws.connect(speechTranslateUrl[1], null, null, { 'Authorization' : 'Bearer ' + accessToken });
 
 		}
 	}
