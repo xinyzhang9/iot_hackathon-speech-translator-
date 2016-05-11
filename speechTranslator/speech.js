@@ -7,20 +7,70 @@ var clientSecret = 'afef7e827b6a445abf5707767900ad0b'; // API key from Azure mar
 
 var str = 'This is a cool demo to call Microsoft text to speach service in Node.js.';
 
+var langs = ['es-ES','zh-CN','de-DE'];
+
+var finalRes = [];
+
 console.log('Converting from text -> speech -> text.');
 console.log('Input text: "' + str + '"');
 
 getAccessToken(clientId, clientSecret, function(err, accessToken) {
   if(err) return console.log(err);
   console.log('Got access token: ' + accessToken)
-  
-  speechToText('houyan.wav', accessToken, function(err, res) {
+
+
+  speechToText('houyan.wav', accessToken, langs[0], function(err, res) {
+      // var x = i;
       if(err) return console.log(err);
-      console.log('Confidence ' + res.results[0].confidence + ' for: "' + res.results[0].lexical + '"');
-    });})
+      var newObj = {'Confidence' : res.results[0].confidence,
+                    'Content' : res.results[0].lexical,
+                    'lang' : langs[0],
+                   };
+      finalRes.push(newObj);
+      // console.log('Confidence ' + res.results[0].confidence + ' for: "' + res.results[0].lexical + '"');
+      if(finalRes.length === langs.length){
+        console.log(finalRes);
+      }
+        
+    });
 
+  speechToText('houyan.wav', accessToken, langs[1], function(err, res) {
+      // var x = i;
+      if(err) return console.log(err);
+      var newObj = {'Confidence' : res.results[0].confidence,
+                    'Content' : res.results[0].lexical,
+                    'lang' : langs[1],
+                   };
+      finalRes.push(newObj);
+      // console.log('Confidence ' + res.results[0].confidence + ' for: "' + res.results[0].lexical + '"');
+      if(finalRes.length === langs.length){
+        console.log(finalRes);
+      }
+        
+    });
+
+  speechToText('houyan.wav', accessToken, langs[2], function(err, res) {
+      // var x = i;
+      if(err) return console.log(err);
+      var newObj = {'Confidence' : res.results[0].confidence,
+                    'Content' : res.results[0].lexical,
+                    'lang' : langs[2],
+                   };
+      finalRes.push(newObj);
+      // console.log('Confidence ' + res.results[0].confidence + ' for: "' + res.results[0].lexical + '"');
+      if(finalRes.length === langs.length){
+        console.log(finalRes);
+      }
+        
+    });
+
+
+  
+})
 // ==== Helpers ====
-
+function getLang(i){
+  return langs[i];
+}
 function getAccessToken(clientId, clientSecret, callback) {
   request.post({
     url: 'https://oxford-speech.cloudapp.net/token/issueToken',
@@ -67,7 +117,7 @@ function textToSpeech(text, filename, accessToken, callback) {
   });
 }
 
-function speechToText(filename, accessToken, callback) {
+function speechToText(filename, accessToken, lang, callback) {
   fs.readFile(filename, function(err, waveData) {
     if(err) return callback(err);
     request.post({
@@ -75,7 +125,7 @@ function speechToText(filename, accessToken, callback) {
       qs: {
         'scenarios': 'ulm',
         'appid': 'D4D52672-91D7-4C74-8AD8-42B1D98141A5', // This magic value is required
-        'locale': 'es-ES',
+        'locale': lang,
         'device.os': 'wp7',
         'version': '3.0',
         'format': 'json',
@@ -98,3 +148,4 @@ function speechToText(filename, accessToken, callback) {
     });
   });
 }
+
