@@ -1,7 +1,7 @@
 {
   "name": "NodejsSpeechTranslateApp",
   "description": "NodejsSpeechTranslateApp",
-  "main": "app.js",
+  "main": "speech.js",
   "author": {
   },
   "dependencies": {
